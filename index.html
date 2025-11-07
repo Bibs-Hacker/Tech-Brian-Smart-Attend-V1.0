@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NeonClass Pro v4.0</title>
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#00ffea" />
+    <link rel="icon" href="https://files.catbox.moe/2u0gmv.jpg" />
+    <link rel="apple-touch-icon" href="https://files.catbox.moe/2u0gmv.jpg" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;900&family=Roboto:wght@300;500&display=swap');
+        :root {
+            --neon: #00ffea; --bg-dark: #0b0c1a; --bg-card: #12132a; --text: #e0e0ff; --accent: #ff00aa;
+        }
+        .light { --neon: #00aaff; --bg-dark: #f0f4ff; --bg-card: #ffffff; --text: #1a1a2e; --accent: #ff2d95; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: 'Roboto', sans-serif; background: var(--bg-dark); color: var(--text); overflow-x:hidden; transition:0.5s; }
+        
+        #splash { position:fixed; inset:0; background:#000; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:9999; animation:fadeOut 3s forwards; }
+        #splash img { width:180px; filter:drop-shadow(0 0 30px var(--neon)); animation:pulse 2s infinite; }
+        #splash h1 { font-family:'Orbitron'; font-size:3rem; background:linear-gradient(45deg,var(--neon),var(--accent)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-top:20px; }
+        @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+        @keyframes fadeOut { 0%{opacity:1} 70%{opacity:1} 100%{opacity:0; visibility:hidden} }
+
+        .container { max-width:1100px; margin:0 auto; padding:20px; opacity:0; animation:fadeIn 1s forwards 3s; }
+        @keyframes fadeIn { to { opacity:1; } }
+        header h1 { font-family:'Orbitron'; font-size:3.5rem; background:linear-gradient(90deg,#00ffea,#ff00aa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; text-shadow:0 0 30px rgba(0,255,234,0.5); text-align:center; }
+        .toggle { position:fixed; top:20px; right:20px; z-index:100; background:var(--bg-card); padding:12px; border-radius:50px; box-shadow:0 0 20px rgba(0,255,234,0.4); cursor:pointer; }
+        .toggle span { font-size:1.8rem; }
+
+        .card { background:var(--bg-card); border-radius:20px; padding:25px; margin:20px 0; box-shadow:0 0 30px rgba(0,255,234,0.2); border:1px solid var(--neon); position:relative; }
+        input, select { width:100%; padding:15px; margin:10px 0; border:2px solid var(--neon); background:transparent; color:var(--text); border-radius:10px; font-size:1rem; }
+        .search { background:var(--bg-dark); color:var(--neon); }
+
+        table { width:100%; border-collapse:collapse; margin:20px 0; }
+        th, td { padding:15px; text-align:center; border:1px solid var(--neon); }
+        th { background:rgba(0,255,234,0.1); font-family:'Orbitron'; }
+        .circle { width:28px; height:28px; border:3px solid var(--neon); border-radius:50%; display:inline-block; cursor:pointer; transition:0.3s; }
+        .circle.checked { background:var(--neon); box-shadow:0 0 15px var(--neon); }
+
+        .btn { padding:15px 30px; margin:10px; border:none; border-radius:50px; font-weight:bold; cursor:pointer; transition:0.4s; font-size:1.1rem; }
+        .send-lec { background:#25d366; box-shadow:0 0 20px #25d366; }
+        .send-hod { background:#ff9500; box-shadow:0 0 20px #ff9500; }
+        .admin-btn { background:#ff00aa; box-shadow:0 0 20px #ff00aa; }
+        .cert-btn { background:#ffd700; color:#000; box-shadow:0 0 20px #ffd700; }
+        .edit-btn { background:#00ffff; padding:8px 15px; font-size:0.9rem; }
+        .delete-btn { background:#ff0066; padding:8px 15px; font-size:0.9rem; }
+        .btn:hover, .edit-btn:hover, .delete-btn:hover, .cert-btn:hover { transform:scale(1.1); }
+
+        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:999; align-items:center; justify-content:center; }
+        .modal-content { background:var(--bg-card); padding:30px; border-radius:20px; width:95%; max-width:1100px; max-height:95vh; overflow-y:auto; border:2px solid var(--neon); position:relative; }
+        .close { position:absolute; top:15px; right:20px; font-size:2.5rem; cursor:pointer; color:var(--neon); }
+
+        .photo { width:60px; height:60px; border-radius:50%; object-fit:cover; border:3px solid var(--neon); box-shadow:0 0 15px var(--neon); }
+        .camera-container { text-align:center; margin:20px 0; }
+        #camera { width:100%; max-width:400px; border:3px solid var(--neon); border-radius:15px; }
+
+        .remark { font-weight:bold; }
+        .poor { color:#ff0066; } .bad { color:#ff5500; } .average { color:#ffaa00; } .good { color:#00ff00; } .excellent { color:#00ffff; }
+
+        footer { text-align:center; padding:40px; font-size:1.5rem; }
+        .tag { color:var(--neon); font-family:'Orbitron'; font-size:1.5rem; }
+    </style>
+</head>
+<body>
+    <!-- SPLASH -->
+    <div id="splash">
+        <img src="https://files.catbox.moe/25uoqy.jpg" alt="NeonClass Pro">
+        <h1>NeonClass Pro v4.0<br>By Tech Brian👑</h1>
+    </div>
+
+    <!-- TOGGLE -->
+    <div class="toggle" onclick="document.body.classList.toggle('light')">
+        <span>Sun</span><span style="margin-left:10px;">Moon</span>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>CLASS ATTENDANCE DASHBOARD</h1>
+            <p id="classInfo">Class: Not set | Year: Not set</p>
+            <p>Overall: <span id="overall">0</span>%</p>
+        </header>
+
+        <!-- CLASS SETUP -->
+        <div class="card">
+            <h2>Class Details</h2>
+            <input type="text" id="className" placeholder="Class Name (e.g Medical Engineering)" />
+            <input type="text" id="yearSem" placeholder="Year & Semester (e.g Year 1 Sem 1)" />
+            <button class="btn" style="background:#00ffff;" onclick="saveClassInfo()">Save Class Info</button>
+        </div>
+
+        <!-- LECTURER -->
+        <div class="card">
+            <h2>Lecturer Details</h2>
+            <input type="text" id="lecturer" placeholder="Lecturer Name" />
+            <input type="text" id="subject" placeholder="Subject/Unit" />
+        </div>
+
+        <!-- ADD STUDENT WITH PHOTO -->
+        <div class="card">
+            <h2>Add Student</h2>
+            <div class="camera-container">
+                <video id="camera" autoplay playsinline></video>
+                <canvas id="canvas" style="display:none;"></canvas>
+                <br>
+                <button class="btn" style="background:#ff00aa;" onclick="startCamera()">Open Camera</button>
+                <button class="btn" style="background:#00ff00;" onclick="capture()">Capture Photo</button>
+                <button class="btn" onclick="document.getElementById('photoUpload').click()">Upload Photo</button>
+                <input type="file" id="photoUpload" accept="image/*" style="display:none;" onchange="handleUpload(event)">
+            </div>
+            <img id="studentPhotoPreview" class="photo" src="" style="display:none; margin:10px auto;">
+            <input type="text" id="newName" placeholder="Full Name">
+            <input type="text" id="newReg" placeholder="Reg/Adm No">
+            <input type="text" id="newPhone" placeholder="Phone (254...)">
+            <button class="btn" style="background:#00ff00; width:100%;" onclick="addStudent()">ADD STUDENT</button>
+        </div>
+
+        <!-- MANAGE STUDENTS -->
+        <div class="card">
+            <h2>Manage Students</h2>
+            <input type="text" id="searchStudents" class="search" placeholder="Search by name, reg, phone..." onkeyup="filterStudents()" />
+            <div id="studentsList"></div>
+        </div>
+
+        <!-- ATTENDANCE -->
+        <div class="card">
+            <h2>Mark Attendance - Week <span id="weekNum">1</span></h2>
+            <input type="text" id="searchTable" class="search" placeholder="Quick search..." onkeyup="filterTable()" />
+            <table id="attendanceTable">
+                <thead><tr><th>Photo</th><th>Student</th><th>Reg</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Remark</th></tr></thead>
+                <tbody></tbody>
+            </table>
+            <div style="text-align:center; margin:30px 0;">
+                <button class="btn send-lec" onclick="sendToLecturer()">SEND TO LECTURER</button>
+                <button class="btn send-hod" onclick="sendToHOD()">WEEKLY TO HOD</button>
+                <button class="btn admin-btn" onclick="openAdmin()">ADMIN DASHBOARD</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <button class="btn" style="width:100%; background:#ff00aa;" onclick="openHistory()">VIEW HISTORY</button>
+        </div>
+
+        <footer>
+            <p>Powered by <span class="tag">Tech Brian</span> © 2025 | NeonClass Pro v4.0</p>
+        </footer>
+    </div>
+
+    <!-- ADMIN MODAL -->
+    <div class="modal" id="adminModal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAdmin()">X</span>
+            <h1 style="text-align:center; color:var(--neon);">ADMIN DASHBOARD</h1>
+            <input type="text" id="adminSearch" class="search" placeholder="Search student..." onkeyup="filterAdmin()" />
+            <p style="text-align:center; font-size:1.5rem;">Class: <span id="adminClass">?</span> | <span id="adminYear">?</span></p>
+            <h2>Class: <span id="classPerc">0</span>% → <span id="classRemark">?</span></h2>
+            <table style="width:100%; margin-top:20px;">
+                <thead><tr><th>Photo</th><th>Name</th><th>Reg</th><th>Phone</th><th>%</th><th>Remark</th><th>Certificate</th></tr></thead>
+                <tbody id="adminTable"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- HISTORY MODAL -->
+    <div class="modal" id="historyModal">
+        <div class="modal-content">
+            <span class="close" onclick="closeHistory()">X</span>
+            <h1 style="text-align:center; color:var(--neon);">HISTORY</h1>
+            <div id="historyContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const { jsPDF } = window.jspdf;
+        let students = [];
+        let attendance = { weeks: {}, currentWeek: "Week1", className: "", yearSem: "" };
+        const days = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+        let stream = null;
+        let currentPhoto = "";
+
+        if (localStorage.getItem("neonClassV4")) {
+            const data = JSON.parse(localStorage.getItem("neonClassV4"));
+            students = data.students || [];
+            attendance = data.attendance || attendance;
+        } else {
+            students = [
+                {name:"Brian Omondi", reg:"C/MET/25018", phone:"254740950572", photo:"https://files.catbox.moe/1xcpmm.jpg"}
+            ];
+        }
+
+        function saveAll() {
+            localStorage.setItem("neonClassV4", JSON.stringify({students, attendance}));
+            renderAll();
+        }
+
+        function saveClassInfo() {
+            attendance.className = document.getElementById("className").value || "Medical Engineering";
+            attendance.yearSem = document.getElementById("yearSem").value || "Year 1 Sem 1";
+            saveAll();
+        }
+
+        function startCamera() {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(s => {
+                    stream = s;
+                    document.getElementById("camera").srcObject = stream;
+                    document.getElementById("camera").style.display = "block";
+                });
+        }
+
+        function capture() {
+            const video = document.getElementById("camera");
+            const canvas = document.getElementById("canvas");
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext("2d").drawImage(video, 0, 0);
+            currentPhoto = canvas.toDataURL("image/jpeg");
+            document.getElementById("studentPhotoPreview").src = currentPhoto;
+            document.getElementById("studentPhotoPreview").style.display = "block";
+            stopCamera();
+        }
+
+        function handleUpload(e) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = () => {
+                currentPhoto = reader.result;
+                document.getElementById("studentPhotoPreview").src = currentPhoto;
+                document.getElementById("studentPhotoPreview").style.display = "block";
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function stopCamera() {
+            if (stream) stream.getTracks().forEach(t => t.stop());
+            document.getElementById("camera").style.display = "none";
+        }
+
+        function addStudent() {
+            const name = document.getElementById("newName").value.trim();
+            const reg = document.getElementById("newReg").value.trim();
+            const phone = document.getElementById("newPhone").value.trim();
+            if (name && reg && phone && currentPhoto) {
+                students.push({name, reg, phone, photo: currentPhoto});
+                document.getElementById("newName").value = document.getElementById("newReg").value = document.getElementById("newPhone").value = "";
+                currentPhoto = "";
+                document.getElementById("studentPhotoPreview").style.display = "none";
+                saveAll();
+            }
+        }
+
+        function generateCertificate(student, perc, remark) {
+            const doc = new jsPDF();
+            doc.setFillColor(11, 12, 26);
+            doc.rect(0, 0, 210, 297, 'F');
+            
+            doc.addImage(student.photo, 'JPEG', 75, 40, 60, 60);
+            
+            doc.setFontSize(32);
+            doc.setTextColor(0, 255, 234);
+            doc.setFont("helvetica", "bold");
+            doc.text("CERTIFICATE", 105, 120, null, null, "center");
+            
+            doc.setFontSize(24);
+            doc.setTextColor(255, 0, 170);
+            doc.text("OF ATTENDANCE", 105, 140, null, null, "center");
+            
+            doc.setFontSize(16);
+            doc.setTextColor(255, 255, 255);
+            doc.text(`This is to certify that`, 105, 170, null, null, "center");
+            doc.setFontSize(22);
+            doc.setTextColor(0, 255, 234);
+            doc.text(student.name, 105, 190, null, null, "center");
+            doc.setFontSize(14);
+            doc.setTextColor(255, 255, 255);
+            doc.text(`Reg No: ${student.reg}`, 105, 205, null, null, "center");
+            doc.text(`${attendance.className} • ${attendance.yearSem}`, 105, 220, null, null, "center");
+            doc.text(`has maintained ${perc}% attendance`, 105, 240, null, null, "center");
+            doc.setFontSize(18);
+            doc.setTextColor(255, 215, 0);
+            doc.text(`${remark}`, 105, 255, null, null, "center");
+            
+            doc.setFontSize(12);
+            doc.setTextColor(0, 255, 234);
+            doc.text("Generated by NeonClass Pro v4.0 • Tech Brian", 105, 280, null, null, "center");
+            
+            doc.save(`${student.name}_Certificate_${new Date().toISOString().slice(0,10)}.pdf`);
+        }
+
+        function editStudent(i) {
+            const s = students[i];
+            const newName = prompt("Edit Name:", s.name);
+            const newReg = prompt("Edit Reg:", s.reg);
+            const newPhone = prompt("Edit Phone:", s.phone);
+            if (newName && newReg && newPhone) {
+                students[i] = {...s, name: newName, reg: newReg, phone: newPhone};
+                saveAll();
+            }
+        }
+
+        function deleteStudent(i) {
+            if (confirm("Delete " + students[i].name + "?")) {
+                students.splice(i, 1);
+                saveAll();
+            }
+        }
+
+        function filterStudents() {
+            const term = document.getElementById("searchStudents").value.toLowerCase();
+            const list = document.getElementById("studentsList");
+            list.innerHTML = "<h3>All Students:</h3>";
+            students.forEach((s, i) => {
+                if (s.name.toLowerCase().includes(term) || s.reg.toLowerCase().includes(term) || s.phone.includes(term)) {
+                    list.innerHTML += `
+                        <div style="padding:12px; border:1px solid var(--neon); margin:10px 0; border-radius:10px; display:flex; align-items:center; gap:15px;">
+                            <img src="${s.photo}" class="photo">
+                            <div style="flex:1;"><b>${s.name}</b><br>${s.reg} • ${s.phone}</div>
+                            <div>
+                                <button class="edit-btn" onclick="editStudent(${i})">Edit</button>
+                                <button class="delete-btn" onclick="deleteStudent(${i})">Delete</button>
+                            </div>
+                        </div>`;
+                }
+            });
+        }
+
+        function renderTable() {
+            const tbody = document.querySelector("#attendanceTable tbody");
+            tbody.innerHTML = "";
+            const week = attendance.currentWeek;
+            if (!attendance.weeks[week]) {
+                attendance.weeks[week] = {};
+                days.forEach(d => attendance.weeks[week][d] = Array(students.length).fill(false));
+            }
+
+            students.forEach((s, i) => {
+                let presentCount = 0;
+                days.forEach(d => { if (attendance.weeks[week][d][i]) presentCount++; });
+                const perc = Math.round((presentCount / 5) * 100);
+                const remark = getRemark(perc);
+
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td><img src="${s.photo}" class="photo"></td>
+                    <td>${s.name}</td>
+                    <td>${s.reg}</td>
+                    ${days.map(day => `
+                        <td><div class="circle ${attendance.weeks[week][day][i] ? 'checked' : ''}"
+                            onclick="toggleAtt('${week}','${day}',${i})"></div></td>
+                    `).join("")}
+                    <td class="remark ${remark.class}">${remark.text} (${perc}%)</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function toggleAtt(week, day, stu) {
+            attendance.weeks[week][day][stu] = !attendance.weeks[week][day][stu];
+            saveAll();
+        }
+
+        function getRemark(perc) {
+            if (perc >= 90) return {text: "Excellent", class: "excellent"};
+            if (perc >= 80) return {text: "Good", class: "good"};
+            if (perc >= 70) return {text: "Average", class: "average"};
+            if (perc >= 60) return {text: "Bad", class: "bad"};
+            return {text: "Poor", class: "poor"};
+        }
+
+        function updateOverall() {
+            let total = 0, present = 0;
+            Object.keys(attendance.weeks).forEach(w => {
+                days.forEach(d => {
+                    if (attendance.weeks[w][d]) {
+                        total += students.length;
+                        present += attendance.weeks[w][d].filter(Boolean).length;
+                    }
+                });
+            });
+            const perc = total ? Math.round((present / total) * 100) : 0;
+            document.getElementById("overall").innerText = perc;
+            document.getElementById("classInfo").innerHTML = `Class: ${attendance.className} | ${attendance.yearSem}`;
+        }
+
+        function renderAll() {
+            const weekNum = Math.ceil(new Date().getDate() / 7);
+            const current = "Week" + weekNum;
+            if (attendance.currentWeek !== current) {
+                attendance.currentWeek = current;
+                attendance.weeks[current] = {};
+                days.forEach(d => attendance.weeks[current][d] = Array(students.length).fill(false));
+            }
+            document.getElementById("weekNum").innerText = weekNum;
+            filterStudents();
+            renderTable();
+            updateOverall();
+        }
+
+        function openAdmin() {
+            document.getElementById("adminModal").style.display = "flex";
+            document.getElementById("adminClass").innerText = attendance.className;
+            document.getElementById("adminYear").innerText = attendance.yearSem;
+            const classPerc = document.getElementById("overall").innerText;
+            document.getElementById("classPerc").innerText = classPerc + "%";
+            const remark = getRemark(classPerc);
+            document.getElementById("classRemark").innerText = remark.text;
+            document.getElementById("classRemark").className = remark.class;
+
+            const tbody = document.getElementById("adminTable");
+            tbody.innerHTML = "";
+            students.forEach((s, i) => {
+                let present = 0;
+                days.forEach(d => { if (attendance.weeks[attendance.currentWeek][d][i]) present++; });
+                const perc = Math.round((present / 5) * 100);
+                const remark = getRemark(perc);
+                tbody.innerHTML += `
+                    <tr>
+                        <td><img src="${s.photo}" class="photo"></td>
+                        <td>${s.name}</td>
+                        <td>${s.reg}</td>
+                        <td>${s.phone}</td>
+                        <td>${perc}%</td>
+                        <td class="${remark.class}">${remark.text}</td>
+                        <td><button class="cert-btn" onclick='generateCertificate(${JSON.stringify(s)}, ${perc}, "${remark.text}")'>Certificate</button></td>
+                    </tr>`;
+            });
+        }
+
+        function filterAdmin() {
+            const term = document.getElementById("adminSearch").value.toLowerCase();
+            document.querySelectorAll("#adminTable tr").forEach(row => {
+                row.style.display = row.textContent.toLowerCase().includes(term) ? "" : "none";
+            });
+        }
+
+        function closeAdmin() { document.getElementById("adminModal").style.display = "none"; }
+        function openHistory() { document.getElementById("historyModal").style.display = "flex"; renderHistory(); }
+        function closeHistory() { document.getElementById("historyModal").style.display = "none"; }
+
+        function renderHistory() {
+            const div = document.getElementById("historyContent");
+            div.innerHTML = "";
+            Object.keys(attendance.weeks).reverse().forEach(week => {
+                const weekDiv = document.createElement("div");
+                weekDiv.style = "background:rgba(0,255,234,0.05); padding:20px; margin:20px 0; border-radius:15px; border-left:5px solid var(--neon);";
+                weekDiv.innerHTML = `<h3>${week} - ${attendance.className}</h3>`;
+                days.forEach(day => {
+                    const cnt = attendance.weeks[week][day] ? attendance.weeks[week][day].filter(Boolean).length : 0;
+                    weekDiv.innerHTML += `<p><b>${day}:</b> ${cnt}/${students.length} present</p>`;
+                });
+                div.appendChild(weekDiv);
+            });
+        }
+
+        function sendToLecturer() {
+            const lec = document.getElementById("lecturer").value || "Lecturer";
+            const sub = document.getElementById("subject").value || "Class";
+            let msg = `*DAILY ATTENDANCE*%0AClass: ${attendance.className}%0A${attendance.yearSem}%0AUnit: ${sub}%0ALecturer: ${lec}%0ADate: ${new Date().toLocaleDateString()}%0A%0A`;
+            students.forEach((s,i) => {
+                const day = new Date().toLocaleString('en-us',{weekday:'short'});
+                const present = attendance.weeks[attendance.currentWeek][day][i] ? "Present" : "Absent";
+                msg += `${s.name} (${s.reg}) - ${present}%0A`;
+            });
+            msg += `%0A_NeonClass Pro v4.0 by Tech Brian_`;
+            const phone = prompt("Lecturer WhatsApp", "");
+            if (phone) window.open(`https://wa.me/${phone}?text=${msg}`);
+        }
+
+        function sendToHOD() {
+            let msg = `*WEEKLY REPORT*%0AClass: ${attendance.className}%0A${attendance.yearSem}%0AWeek: ${attendance.currentWeek}%0A%0A`;
+            students.forEach((s,i) => {
+                let att = 0;
+                days.forEach(d => { if (attendance.weeks[attendance.currentWeek][d][i]) att++; });
+                const perc = Math.round((att/5)*100);
+                msg += `${s.name} → ${perc}% ${getRemark(perc).text}%0A`;
+            });
+            msg += `%0A_Tech Brian_`;
+            const phone = prompt("HOD WhatsApp", "");
+            if (phone) window.open(`https://wa.me/${phone}?text=${msg}`);
+        }
+
+        renderAll();
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            setTimeout(() => deferredPrompt?.prompt(), 3000);
+        });
+    </script>
+</body>
+  </html>
