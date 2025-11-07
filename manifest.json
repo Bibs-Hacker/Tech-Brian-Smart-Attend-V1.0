@@ -1,0 +1,16 @@
+{
+  "name": "Smart Attend",
+  "short_name": "Smart Attend",
+  "description": "Futuristic Class Attendance System by Tech Brian",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#0b0c1a",
+  "theme_color": "#00ffea",
+  "icons": [
+    {
+      "src": "https://files.catbox.moe/25uoqy.jpg",
+      "sizes": "512x512",
+      "type": "image/jpg"
+    }
+  ]
+}
